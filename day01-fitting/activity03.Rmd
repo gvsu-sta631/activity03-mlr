@@ -1,8 +1,36 @@
 ---
-title: "Activity 2 - Day 1"
+title: "Activity 3 - Day 1"
 output: github_document
 ---
 
-```{setup, include=FALSE}
+```{r setup, include=FALSE, warning=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(GGally)
 ```
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+```
+
+```{r}
+hfi <- readr::read_csv("https://www.openintro.org/data/csv/hfi.csv")
+hfi
+```
+
+```{r}
+m1 <- lm(pf_score~pf_expression_control + hf_score + ef_score, data = hfi)
+tidy(m1)
+```
+
+```{r warning=FALSE}
+hfi %>% 
+  select(ends_with("_score")) %>% 
+  ggpairs()
+```
+
+```{r}
+m_hr_ef <- lm(pf_score ~ hf_score + ef_score, data = hfi)
+tidy(m_hr_ef)
+```
+
