@@ -3,6 +3,42 @@ title: "Activity 2 - Day 1"
 output: github_document
 ---
 
-```{setup, include=FALSE}
+```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+```{r}
+install.packages("tidyverse")
+install.packages("tidymodels")
+```
+
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+```
+
+
+```{r}
+install.packages("GGally")
+```
+
+```{r}
+library(GGally)
+```
+
+```{r}
+hfi_csv = read_csv('https://www.openintro.org/data/csv/hfi.csv')
+```
+
+
+```{r}
+hfi<-hfi_csv
+```
+
+```{r}
+hfi %>% 
+  select(ends_with("_score")) %>% 
+  ggpairs()
+```
+
