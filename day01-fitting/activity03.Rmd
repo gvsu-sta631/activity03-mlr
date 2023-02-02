@@ -1,8 +1,156 @@
 ---
-title: "Activity 2 - Day 1"
+title: "Activity 3 - Day 1"
 output: github_document
 ---
 
-```{setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+### Task 2: Loading the necessary packages
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE)
+
+library(tidyverse)
+library(tidymodels)
+library(GGally)
+library(scatterplot3d)
 ```
+
+### Task 3: Loading the data 
+
+```{r}
+hfi <- data.frame(readr::read_csv("https://www.openintro.org/data/csv/hfi.csv"))
+
+hfi_2016 <- hfi %>% filter(year == "2016") 
+hfi_2016
+```
+
+This is an observational study.
+
+```{r}
+# Plotting the Personal freedom score distribution using a histogram
+ggplot(hfi_2016, aes(x = pf_score)) +
+  geom_histogram() + 
+  labs(title = "Distribution of Personal freedom score",
+       x = "Personal freedom score")
+```
+
+```{r}
+# Plotting the Personal freedom score distribution using a boxplot
+ggplot(hfi_2016, aes(x = pf_score)) +
+  geom_boxplot() +
+  labs(title = "Distribution of Personal freedom score",
+       x = "Personal freedom score") +
+  theme_bw() +
+  theme(legend.position = "bottom") +
+  theme(text = element_text(face = "bold"))
+```
+
+The distribution of pf_score is left-skewed with outliers and multiple peaks present. This says that most observations of countries’ personal freedom score lies an abnormal distance from other values in our data set. This was not expected since the average personal freedom score being 7.2 and there are some places where personal freedom score is between 2 to 3 means there is absence of state-level policies, regulations, and laws governing injury-related behaviors.
+
+
+```{r}
+# hf score vs ef score
+hfi_2016 %>% ggplot(aes(x = hf_score,
+                   y = ef_score)) + 
+  geom_point(alpha=0.20) +
+  geom_smooth(se = FALSE, method = "lm", size = 1) +
+  labs(title = "Relationship between the hf score and ef score",
+       x = "Human Freedom Score",
+       y = "Economic freedom score",
+       caption = "Data source: The OpenIntro site") + 
+  theme_bw()
+```
+
+The above plot says that there is a linear relationship between these two variables.
+
+### Task 4: Pairwise relationships
+
+Next we will use hf_score and ef_score variables to describe/predict the patterns in pf_score. 
+
+```{r}
+hfi_2016 %>% 
+  select(ends_with("_score")) %>% 
+  ggpairs()
+```
+
+There is a low positive correlation between ef score and pf score whereas there is a high positive correlation between hf score and pf score. Also there is a high positive correlation between hf score and ef score. Most of the relationships look linear.
+
+There are outliers present in the pf score vs ef score correlation graph.
+
+For each pair of variables, the correlation coefficient between ef score and pf score is 0.627, between hf score and pf score the value is 0.948, and between hf score and ef score the value is 0.843.
+
+### Task 5: The multiple linear regression model
+
+```{r}
+# Fitting the model
+m_hr_ef <- lm(pf_score ~ hf_score + ef_score, data = hfi_2016)
+tidy(m_hr_ef)
+```
+
+Estimated equation for this model:
+estimated pf_score = beta0 + (beta1 * hf_score) + (beta2 * ef_score)
+
+Slope Interpretation for hf_score: 
+Interpretation: For every 1 unit increase in human freedom score, we expect the personal freedom score to increase by 2.00 units, holding economic freedom score constant.
+
+Slope Interpretation for ef_score:
+Interpretation: For every 1 unit increase in economic freedom score, we expect the personal freedom score to decrease by 1 unit, holding human freedom score constant.
+
+Intercept Interpretation for pf_score:
+Interpretation: The expected personal freedom score when the human freedom score is 0 unit and economic freedom score is 0 unit is 1.438869e-10 units.
+
+### Challenge: 3-D plots
+
+```{r}
+hfi_score_table <- hfi_2016 %>% select(hf_score, ef_score, pf_score)
+
+# Creating 3-D scatter plot
+scatterplot3d(hfi_score_table[,1:3], 
+              pch = 16, color="steelblue",
+              main="3D Scatter Plot",
+              xlab = "Human Freedom Score",
+              ylab = "Personal Freedom Score",
+              zlab = "Economic Freedom Score")
+```
+
+### Task 2: Overall model - is at least one predictor useful?
+
+```{r}
+# review any visual patterns
+hfi %>% 
+  select(pf_score, pf_expression_influence, pf_expression_control) %>% 
+  ggpairs()
+
+#fit the mlr model
+m_pf <- lm(pf_score ~ pf_expression_influence + pf_expression_control, data = hfi)
+tidy(m_pf)
+```
+
+# Is there a relationship between the response and predictors?
+
+```{r}
+summary(m_pf)
+```
+
+### Task 3: Deciding on important variables
+
+
+### Task 4: Model fit
+
+```{r}
+glance(m_pf)
+```
+
+## Linearity
+
+```{r}
+# obtain fitted values and residuals
+m_pf_aug <- augment(m_pf)
+
+# plot fitted values and residuals
+ggplot(data = m_pf_aug, aes(x = .fitted, y = .resid)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  xlab("Fitted values") +
+  ylab("Residuals")
+```
+
