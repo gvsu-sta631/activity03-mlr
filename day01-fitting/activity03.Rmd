@@ -20,7 +20,6 @@ library(scatterplot3d)
 hfi <- data.frame(readr::read_csv("https://www.openintro.org/data/csv/hfi.csv"))
 
 hfi_2016 <- hfi %>% filter(year == "2016") 
-hfi_2016
 ```
 
 This is an observational study.
@@ -125,11 +124,28 @@ m_pf <- lm(pf_score ~ pf_expression_influence + pf_expression_control, data = hf
 tidy(m_pf)
 ```
 
+Estimated equation for this model:
+estimated pf_score = beta0 + (beta1 * pf_expression_influence) + (beta2 * pf_expression_control)
+
+Intercept Interpretation for pf_score:
+For countries with a pf_expression_influence of 0 (those with the largest amount of laws/regulations on media content) and pf_expression_control of 0 (those with the largest amount of political pressure on media content), we expect their mean personal freedom score to be 4.71.
+
+Slope Interpretation for pf_expression_influence: 
+For a given pf_expression_control value (i.e., a given level of laws/regulations on media content), a 1 unit increase in pf_expression_influence is associated with a 0.188 unit increase of a country’s mean personal freedom score.
+
+Slope Interpretation for pf_expression_control:
+For a given pf_expression_influence value (i.e., a given level of political pressure on media content), a 1 unit increase in pf_expression_control is associated with a 0.288 unit increase of a country’s mean personal freedom score.
+
+
 # Is there a relationship between the response and predictors?
 
 ```{r}
 summary(m_pf)
 ```
+
+Decision: Since the p-value < 0.05, we are going to reject the null hypothesis.
+
+Interpretation: Since the p-value < 0.05, we have sufficient evidence that at least one of the slopes associated with this MLR model exists at the 5% significance level.
 
 ### Task 3: Deciding on important variables
 
@@ -140,6 +156,12 @@ summary(m_pf)
 glance(m_pf)
 ```
 
+The value of R^2 for this model is 0.7266672.
+
+This means 72.67% of the variability in the country’s personal freedom score is explained by their personal freedom expression control and personal freedom expression influence. 
+
+In SLR model R^2 value was 0.7141342 whereas in MLR model R^2 value is 0.7266672.
+ 
 ## Linearity
 
 ```{r}
@@ -154,3 +176,44 @@ ggplot(data = m_pf_aug, aes(x = .fitted, y = .resid)) +
   ylab("Residuals")
 ```
 
+Linearity: From the above Residual by predicted value plot, there is no apparent pattern in the residuals plot. So it indicates there is a linear relationship between these variables. Thus, the linearity assumption is met here.
+
+## Nearly normal residuals
+
+```{r}
+ggplot(data = m_pf_aug, aes(x = .resid)) +
+  geom_histogram(binwidth = 0.25) +
+  xlab("Residuals")
+```
+
+```{r}
+# QQ-plot
+qqnorm(m_pf_aug$.resid)
+qqline(m_pf_aug$.resid)
+```
+
+Nearly normal residuals: Based on the histogram, the residuals are nearly normal. There is only one real peak (uni-modal) on the bell curve in the residual histogram, so the nearly normal condition is met.
+
+Constant variability: The points residuals vs. fitted plot show that points are scattered around 0, there is a constant variability.Thus, the constant variability condition appear to be met.
+
+### Task 5: Prediction
+
+```{r}
+# Variables associated with the United States in 2016 
+hfi %>% 
+  filter(countries == "United States" & year == 2016) %>% 
+  select(pf_score, pf_expression_influence, pf_expression_control)
+```
+
+```{r}
+hfi %>% 
+  filter(countries == "United States" & year == 2016) %>% 
+  predict(m_pf, .)
+```
+
+Estimated model:
+estimated pf_score = 4.71 + 0.188 * pf_expression_influence + 0.288 * pf_expression_control
+
+estimated pf_score  = 4.71 + 0.188 * 8 + 0.288 * 7 = 8.23
+
+The actual personal freedom score for the United States in 2016 was 8.74731 and predicted personal freedom score is 8.23. The residual would be 8.74731 - 8.23 =  0.51731.
